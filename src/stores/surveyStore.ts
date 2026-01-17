@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { Question, SurveyResponse, defaultQuestions } from '@/types/survey';
 
 interface SurveyState {
@@ -11,9 +12,12 @@ interface SurveyState {
   addResponse: (response: SurveyResponse) => void;
   getResponseCounts: (questionId: string) => Record<string, number>;
   getTotalResponses: () => number;
+  clearResponses: () => void;
 }
 
-export const useSurveyStore = create<SurveyState>((set, get) => ({
+export const useSurveyStore = create<SurveyState>()(
+  persist(
+    (set, get) => ({
   questions: defaultQuestions,
   responses: [],
   
@@ -60,4 +64,11 @@ export const useSurveyStore = create<SurveyState>((set, get) => ({
   },
   
   getTotalResponses: () => get().responses.length,
-}));
+  
+  clearResponses: () => set({ responses: [] }),
+}),
+    {
+      name: 'survey-storage',
+    }
+  )
+);
