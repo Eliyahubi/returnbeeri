@@ -93,22 +93,25 @@ const AdminDashboard = () => {
                   </ResponsiveContainer>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={data} layout="vertical">
+                    <BarChart data={data}>
                       <XAxis 
+                        type="category" 
+                        dataKey="name"
+                        tick={{ fontSize: 10 }}
+                        interval={0}
+                        angle={-15}
+                        textAnchor="end"
+                        height={60}
+                      />
+                      <YAxis 
                         type="number" 
                         domain={[0, 100]}
                         ticks={[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]}
                         tick={{ fontSize: 10 }}
-                      />
-                      <YAxis 
-                        type="category" 
-                        dataKey="name" 
-                        width={120}
-                        tick={{ fontSize: 11 }}
-                        orientation="right"
+                        orientation="left"
                       />
                       <Tooltip />
-                      <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                      <Bar dataKey="value" radius={[4, 4, 0, 0]}>
                         {data.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.fill} />
                         ))}
