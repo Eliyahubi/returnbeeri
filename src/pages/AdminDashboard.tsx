@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
 import { useSurveyStore } from '@/stores/surveyStore';
 import { Card } from '@/components/ui/card';
-import { Users, BarChart3 } from 'lucide-react';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
+import { Button } from '@/components/ui/button';
+import { Users, BarChart3, RotateCcw } from 'lucide-react';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
 const COLORS = [
   'hsl(220, 70%, 50%)',
@@ -13,7 +14,7 @@ const COLORS = [
 ];
 
 const AdminDashboard = () => {
-  const { questions, getResponseCounts, getTotalResponses } = useSurveyStore();
+  const { questions, getResponseCounts, getTotalResponses, clearResponses } = useSurveyStore();
   const totalResponses = getTotalResponses();
 
   const chartData = useMemo(() => {
@@ -43,7 +44,15 @@ const AdminDashboard = () => {
           </div>
 
           {/* Stats */}
-          <div className="flex gap-4">
+          <div className="flex gap-4 items-center">
+            <Button 
+              variant="outline" 
+              onClick={clearResponses}
+              className="flex items-center gap-2"
+            >
+              <RotateCcw className="w-4 h-4" />
+              איפוס תשובות
+            </Button>
             <Card className="px-6 py-4 flex items-center gap-3 shadow-card">
               <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
                 <Users className="w-6 h-6 text-primary" />
@@ -75,20 +84,24 @@ const AdminDashboard = () => {
                     <PieChart>
                       <Pie
                         data={data}
-                        cx="50%"
+                        cx="35%"
                         cy="50%"
-                        innerRadius={40}
-                        outerRadius={70}
+                        innerRadius={35}
+                        outerRadius={60}
                         paddingAngle={5}
                         dataKey="value"
-                        label={({ name, value }) => `${name}: ${value}`}
-                        labelLine={false}
                       >
                         {data.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.fill} />
                         ))}
                       </Pie>
                       <Tooltip />
+                      <Legend 
+                        layout="vertical" 
+                        align="right" 
+                        verticalAlign="middle"
+                        formatter={(value, entry: any) => `${value}: ${entry.payload.value}`}
+                      />
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
