@@ -1,8 +1,7 @@
 import { useMemo } from 'react';
 import { useSurveyStore } from '@/stores/surveyStore';
 import { Card } from '@/components/ui/card';
-import { QRCodeSVG } from 'qrcode.react';
-import { Users, BarChart3, QrCode } from 'lucide-react';
+import { Users, BarChart3 } from 'lucide-react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 
 const COLORS = [
@@ -16,7 +15,6 @@ const COLORS = [
 const AdminDashboard = () => {
   const { questions, getResponseCounts, getTotalResponses } = useSurveyStore();
   const totalResponses = getTotalResponses();
-  const surveyUrl = window.location.origin + '/survey';
 
   const chartData = useMemo(() => {
     return questions.map((question) => {
@@ -58,95 +56,84 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* QR Code + Charts Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* QR Code Card */}
-          <Card className="p-6 shadow-card lg:col-span-1">
-            <div className="flex items-center gap-2 mb-4">
-              <QrCode className="w-5 h-5 text-secondary" />
-              <h3 className="font-semibold text-foreground">סרקו להצטרפות</h3>
-            </div>
-            <div className="flex justify-center p-4 bg-muted rounded-xl">
-              <QRCodeSVG value={surveyUrl} size={180} level="H" />
-            </div>
-            <p className="text-xs text-muted-foreground text-center mt-4 break-all">
-              {surveyUrl}
-            </p>
-          </Card>
-
-          {/* Charts */}
-          <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {chartData.map(({ question, data }, idx) => (
-              <Card key={question.id} className="p-6 shadow-card animate-fade-in">
-                <div className="flex items-start gap-2 mb-4">
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <BarChart3 className="w-4 h-4 text-primary" />
-                  </div>
-                  <h3 className="font-medium text-foreground text-sm leading-relaxed">
-                    {question.questionText}
-                  </h3>
+        {/* Charts Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {chartData.map(({ question, data }, idx) => (
+            <Card key={question.id} className="p-6 shadow-card animate-fade-in">
+              <div className="flex items-start gap-2 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <BarChart3 className="w-4 h-4 text-primary" />
                 </div>
+                <h3 className="font-medium text-foreground text-sm leading-relaxed">
+                  {question.questionText}
+                </h3>
+              </div>
 
-                <div className="h-48">
-                  {question.chartType === 'pie' ? (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={data}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={40}
-                          outerRadius={70}
-                          paddingAngle={5}
-                          dataKey="value"
-                          label={({ name, value }) => `${name}: ${value}`}
-                          labelLine={false}
-                        >
-                          {data.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.fill} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={data} layout="vertical">
-                        <XAxis type="number" />
-                        <YAxis 
-                          type="category" 
-                          dataKey="name" 
-                          width={100}
-                          tick={{ fontSize: 11 }}
-                        />
-                        <Tooltip />
-                        <Bar dataKey="value" radius={[0, 4, 4, 0]}>
-                          {data.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.fill} />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  )}
-                </div>
-
-                {/* Legend */}
-                <div className="flex flex-wrap gap-2 mt-4">
-                  {data.map((item, index) => (
-                    <div key={index} className="flex items-center gap-1.5 text-xs">
-                      <div
-                        className="w-3 h-3 rounded-sm"
-                        style={{ backgroundColor: item.fill }}
+              <div className="h-48">
+                {question.chartType === 'pie' ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={data}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={40}
+                        outerRadius={70}
+                        paddingAngle={5}
+                        dataKey="value"
+                        label={({ name, value }) => `${name}: ${value}`}
+                        labelLine={false}
+                      >
+                        {data.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={data} layout="vertical">
+                      <XAxis 
+                        type="number" 
+                        domain={[0, 100]}
+                        ticks={[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]}
+                        tick={{ fontSize: 10 }}
                       />
-                      <span className="text-muted-foreground">
-                        {item.name} ({item.value})
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            ))}
-          </div>
+                      <YAxis 
+                        type="category" 
+                        dataKey="name" 
+                        width={120}
+                        tick={{ fontSize: 11 }}
+                        orientation="right"
+                      />
+                      <Tooltip />
+                      <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                        {data.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+
+              {/* Legend */}
+              <div className="flex flex-wrap gap-2 mt-4">
+                {data.map((item, index) => (
+                  <div key={index} className="flex items-center gap-1.5 text-xs">
+                    <div
+                      className="w-3 h-3 rounded-sm"
+                      style={{ backgroundColor: item.fill }}
+                    />
+                    <span className="text-muted-foreground">
+                      {item.name} ({item.value})
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          ))}
         </div>
       </div>
     </div>

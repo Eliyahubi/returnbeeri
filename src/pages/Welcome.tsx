@@ -1,11 +1,26 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { QRCodeSVG } from 'qrcode.react';
-import { Play, QrCode } from 'lucide-react';
+import { Play, QrCode, Lock, Settings } from 'lucide-react';
+
+const ADMIN_CODE = 'eli25105';
 
 const Welcome = () => {
   const navigate = useNavigate();
   const surveyUrl = window.location.origin + '/survey';
+  const [adminCode, setAdminCode] = useState('');
+  const [showAdminInput, setShowAdminInput] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleAdminLogin = () => {
+    if (adminCode === ADMIN_CODE) {
+      navigate('/admin');
+    } else {
+      setError('קוד שגוי');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
@@ -49,6 +64,41 @@ const Welcome = () => {
           <Play className="w-5 h-5 ml-2" />
           להתחלת הסקר לחצו כאן
         </Button>
+
+        {/* Admin Access */}
+        <div className="mt-8 pt-6 border-t border-border">
+          {!showAdminInput ? (
+            <button
+              onClick={() => setShowAdminInput(true)}
+              className="flex items-center justify-center gap-2 w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Settings className="w-4 h-4" />
+              כניסה לממשק ניהול
+            </button>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Lock className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">הזן קוד גישה</span>
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  type="password"
+                  value={adminCode}
+                  onChange={(e) => {
+                    setAdminCode(e.target.value);
+                    setError('');
+                  }}
+                  placeholder="קוד גישה"
+                  className="flex-1"
+                  onKeyDown={(e) => e.key === 'Enter' && handleAdminLogin()}
+                />
+                <Button onClick={handleAdminLogin}>כניסה</Button>
+              </div>
+              {error && <p className="text-sm text-destructive">{error}</p>}
+            </div>
+          )}
+        </div>
 
         {/* Image upload placeholder hint */}
         <p className="text-xs text-muted-foreground text-center mt-6">
