@@ -14,7 +14,93 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      questions: {
+        Row: {
+          chart_type: string
+          created_at: string
+          display_order: number
+          id: string
+          options: string[]
+          text: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          chart_type?: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          options?: string[]
+          text: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          chart_type?: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          options?: string[]
+          text?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      response_answers: {
+        Row: {
+          created_at: string
+          id: string
+          question_id: string
+          response_id: string
+          selected_options: string[]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          question_id: string
+          response_id: string
+          selected_options?: string[]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          question_id?: string
+          response_id?: string
+          selected_options?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "response_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "response_answers_response_id_fkey"
+            columns: ["response_id"]
+            isOneToOne: false
+            referencedRelation: "survey_responses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      survey_responses: {
+        Row: {
+          created_at: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
