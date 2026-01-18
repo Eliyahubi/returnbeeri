@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { BarChart3, Settings, LayoutDashboard } from 'lucide-react';
+import { BarChart3, Settings, LayoutDashboard, Home } from 'lucide-react';
 
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
@@ -41,6 +41,13 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
                   {item.label}
                 </Link>
               ))}
+              <Link
+                to="/"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all text-muted-foreground hover:bg-muted hover:text-foreground mr-4 border-r border-border pr-4"
+              >
+                <Home className="w-4 h-4" />
+                עמוד ראשי
+              </Link>
             </div>
           </div>
         </div>
