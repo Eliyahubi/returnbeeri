@@ -100,10 +100,6 @@ const Welcome = () => {
           )}
         </div>
 
-        {/* Image upload placeholder hint */}
-        <p className="text-xs text-muted-foreground text-center mt-6">
-          מקום להוספת לוגו או תמונה
-        </p>
       </div>
     </div>
   );
