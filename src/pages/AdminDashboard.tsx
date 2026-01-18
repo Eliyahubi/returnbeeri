@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
-import { useSurveyStore } from '@/stores/surveyStore';
+import { useQuestions } from '@/hooks/useQuestions';
+import { useResponses } from '@/hooks/useResponses';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, BarChart3, RotateCcw } from 'lucide-react';
+import { Users, BarChart3, RotateCcw, Loader2 } from 'lucide-react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
 const COLORS = [
@@ -14,12 +15,13 @@ const COLORS = [
 ];
 
 const AdminDashboard = () => {
-  const { questions, getResponseCounts, getTotalResponses, clearResponses } = useSurveyStore();
+  const { questions, loading: questionsLoading } = useQuestions();
+  const { getResponseCounts, getTotalResponses, clearResponses, loading: responsesLoading } = useResponses();
   const totalResponses = getTotalResponses();
 
   const chartData = useMemo(() => {
     return questions.map((question) => {
-      const counts = getResponseCounts(question.id);
+      const counts = getResponseCounts(question.id, question.options);
       return {
         question,
         data: Object.entries(counts).map(([name, value], idx) => ({
@@ -30,6 +32,14 @@ const AdminDashboard = () => {
       };
     });
   }, [questions, getResponseCounts]);
+
+  if (questionsLoading || responsesLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background p-6 md:p-8">

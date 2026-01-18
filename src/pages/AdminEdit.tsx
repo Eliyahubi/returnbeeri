@@ -1,72 +1,84 @@
 import { useState } from 'react';
-import { useSurveyStore } from '@/stores/surveyStore';
+import { useQuestions } from '@/hooks/useQuestions';
 import { Question } from '@/types/survey';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Trash2, GripVertical, Save, PieChart, BarChart3 } from 'lucide-react';
+import { Plus, Trash2, GripVertical, Save, PieChart, BarChart3, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 const AdminEdit = () => {
-  const { questions, setQuestions, addQuestion, updateQuestion, deleteQuestion } = useSurveyStore();
+  const { questions, loading, addQuestion, updateQuestion, deleteQuestion } = useQuestions();
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  const handleAddQuestion = () => {
+  const handleAddQuestion = async () => {
     const newQuestion: Question = {
-      id: `q${Date.now()}`,
+      id: crypto.randomUUID(),
       questionText: 'שאלה חדשה',
       type: 'single_choice',
       options: ['תשובה 1', 'תשובה 2'],
       chartType: 'pie',
     };
-    addQuestion(newQuestion);
-    setEditingId(newQuestion.id);
-    toast.success('שאלה חדשה נוספה');
+    const success = await addQuestion(newQuestion);
+    if (success) {
+      setEditingId(newQuestion.id);
+      toast.success('שאלה חדשה נוספה');
+    }
   };
 
-  const handleUpdateQuestion = (id: string, updates: Partial<Question>) => {
-    updateQuestion(id, updates);
+  const handleUpdateQuestion = async (id: string, updates: Partial<Question>) => {
+    await updateQuestion(id, updates);
   };
 
-  const handleDeleteQuestion = (id: string) => {
+  const handleDeleteQuestion = async (id: string) => {
     if (questions.length <= 1) {
       toast.error('חייבת להישאר לפחות שאלה אחת');
       return;
     }
-    deleteQuestion(id);
-    toast.success('השאלה נמחקה');
+    const success = await deleteQuestion(id);
+    if (success) {
+      toast.success('השאלה נמחקה');
+    }
   };
 
-  const handleAddOption = (questionId: string) => {
+  const handleAddOption = async (questionId: string) => {
     const question = questions.find((q) => q.id === questionId);
     if (question) {
-      updateQuestion(questionId, {
+      await updateQuestion(questionId, {
         options: [...question.options, `תשובה ${question.options.length + 1}`],
       });
     }
   };
 
-  const handleUpdateOption = (questionId: string, optionIndex: number, value: string) => {
+  const handleUpdateOption = async (questionId: string, optionIndex: number, value: string) => {
     const question = questions.find((q) => q.id === questionId);
     if (question) {
       const newOptions = [...question.options];
       newOptions[optionIndex] = value;
-      updateQuestion(questionId, { options: newOptions });
+      await updateQuestion(questionId, { options: newOptions });
     }
   };
 
-  const handleDeleteOption = (questionId: string, optionIndex: number) => {
+  const handleDeleteOption = async (questionId: string, optionIndex: number) => {
     const question = questions.find((q) => q.id === questionId);
     if (question && question.options.length > 2) {
       const newOptions = question.options.filter((_, idx) => idx !== optionIndex);
-      updateQuestion(questionId, { options: newOptions });
+      await updateQuestion(questionId, { options: newOptions });
     } else {
       toast.error('חייבות להישאר לפחות 2 תשובות');
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background p-6 md:p-8">
@@ -104,6 +116,9 @@ const AdminEdit = () => {
                   <Input
                     value={question.questionText}
                     onChange={(e) =>
+                      handleUpdateQuestion(question.id, { questionText: e.target.value })
+                    }
+                    onBlur={(e) =>
                       handleUpdateQuestion(question.id, { questionText: e.target.value })
                     }
                     className="text-lg font-medium border-transparent hover:border-border focus:border-primary"
@@ -171,6 +186,7 @@ const AdminEdit = () => {
                     <Input
                       value={option}
                       onChange={(e) => handleUpdateOption(question.id, optIndex, e.target.value)}
+                      onBlur={(e) => handleUpdateOption(question.id, optIndex, e.target.value)}
                       className="flex-1"
                       placeholder="הזן תשובה..."
                     />
@@ -201,7 +217,7 @@ const AdminEdit = () => {
         {/* Save Indicator */}
         <div className="fixed bottom-6 left-6 flex items-center gap-2 text-sm text-muted-foreground bg-card px-4 py-2 rounded-xl shadow-card">
           <Save className="w-4 h-4" />
-          השינויים נשמרים אוטומטית
+          השינויים נשמרים לענן בזמן אמת
         </div>
       </div>
     </div>

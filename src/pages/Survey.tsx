@@ -2,16 +2,26 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { useSurveyStore } from '@/stores/surveyStore';
-import { Question } from '@/types/survey';
-import { ChevronLeft, ChevronRight, Send, CheckCircle2 } from 'lucide-react';
+import { useQuestions } from '@/hooks/useQuestions';
+import { useResponses } from '@/hooks/useResponses';
+import { ChevronLeft, ChevronRight, Send, CheckCircle2, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const Survey = () => {
   const navigate = useNavigate();
-  const { questions, addResponse } = useSurveyStore();
+  const { questions, loading: questionsLoading } = useQuestions();
+  const { addResponse } = useResponses();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string[]>>({});
+  const [submitting, setSubmitting] = useState(false);
+
+  if (questionsLoading || questions.length === 0) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   const currentQuestion = questions[currentIndex];
   const isLastQuestion = currentIndex === questions.length - 1;
@@ -47,14 +57,14 @@ const Survey = () => {
     return currentAnswers.length > 0;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (isLastQuestion) {
-      addResponse({
-        id: Date.now().toString(),
-        answers,
-        submittedAt: new Date(),
-      });
-      navigate('/thank-you');
+      setSubmitting(true);
+      const success = await addResponse(answers);
+      setSubmitting(false);
+      if (success) {
+        navigate('/thank-you');
+      }
     } else {
       setCurrentIndex(currentIndex + 1);
     }
@@ -149,13 +159,15 @@ const Survey = () => {
           )}
           <Button
             onClick={handleNext}
-            disabled={!canProceed()}
+            disabled={!canProceed() || submitting}
             className={cn(
               'flex-1 h-12 rounded-xl gradient-primary hover:opacity-90 transition-all',
-              !canProceed() && 'opacity-50 cursor-not-allowed'
+              (!canProceed() || submitting) && 'opacity-50 cursor-not-allowed'
             )}
           >
-            {isLastQuestion ? (
+            {submitting ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : isLastQuestion ? (
               <>
                 <Send className="w-5 h-5 ml-1" />
                 שלח תשובות
