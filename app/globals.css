@@ -1,0 +1,177 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 48 33% 97%;
+    --foreground: 30 20% 25%;
+    --card: 48 33% 97%;
+    --card-foreground: 30 20% 25%;
+    --popover: 48 33% 97%;
+    --popover-foreground: 30 20% 25%;
+    --primary: 142 20% 35%;
+    --primary-foreground: 48 33% 97%;
+    --secondary: 30 20% 90%;
+    --secondary-foreground: 30 20% 25%;
+    --muted: 30 20% 92%;
+    --muted-foreground: 30 10% 45%;
+    --accent: 30 20% 90%;
+    --accent-foreground: 30 20% 25%;
+    --destructive: 0 70% 65%;
+    --destructive-foreground: 48 33% 97%;
+    --border: 30 20% 85%;
+    --input: 30 20% 85%;
+    --ring: 142 20% 35%;
+    --radius: 0.5rem;
+    
+    /* Urgency colors */
+    --urgency-green: 84 70% 45%;
+    --urgency-orange: 30 90% 60%;
+    --urgency-red: 0 70% 65%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-sand-50 text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* RTL Support */
+  [dir="rtl"] {
+    direction: rtl;
+    text-align: right;
+  }
+
+  [dir="ltr"] {
+    direction: ltr;
+    text-align: left;
+  }
+}
+
+@layer components {
+  /* Calm UI Components */
+  .calm-card {
+    @apply bg-white rounded-lg shadow-sm border border-sand-200 p-4;
+    @apply transition-all duration-200 ease-in-out;
+  }
+
+  .calm-card:hover {
+    @apply shadow-md border-sand-300;
+  }
+
+  .urgency-green {
+    @apply bg-lime-100 text-lime-800 border-lime-200;
+  }
+
+  .urgency-orange {
+    @apply bg-orange-100 text-orange-800 border-orange-200;
+  }
+
+  .urgency-red {
+    @apply bg-red-100 text-red-800 border-red-200;
+  }
+
+  .status-badge {
+    @apply px-2 py-1 rounded-full text-xs font-medium;
+  }
+
+  .btn-primary {
+    @apply bg-sage-600 text-white px-4 py-2 rounded-lg;
+    @apply hover:bg-sage-700 transition-colors;
+    @apply focus:outline-none focus:ring-2 focus:ring-sage-500 focus:ring-offset-2;
+  }
+
+  .btn-secondary {
+    @apply bg-sand-100 text-sand-800 px-4 py-2 rounded-lg;
+    @apply hover:bg-sand-200 transition-colors;
+    @apply focus:outline-none focus:ring-2 focus:ring-sand-400 focus:ring-offset-2;
+  }
+
+  .btn-ghost {
+    @apply text-sand-600 px-4 py-2 rounded-lg;
+    @apply hover:bg-sand-100 transition-colors;
+  }
+
+  /* Form elements */
+  .input-field {
+    @apply w-full px-3 py-2 rounded-lg border border-sand-300;
+    @apply focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent;
+    @apply bg-white;
+  }
+
+  .input-field:disabled {
+    @apply bg-sand-100 cursor-not-allowed;
+  }
+
+  /* Navigation */
+  .nav-link {
+    @apply flex items-center gap-2 px-3 py-2 rounded-lg;
+    @apply text-sand-700 hover:bg-sand-100 hover:text-sand-900;
+    @apply transition-colors;
+  }
+
+  .nav-link.active {
+    @apply bg-sage-100 text-sage-800;
+  }
+
+  /* Task card specific */
+  .task-card {
+    @apply calm-card relative overflow-hidden;
+  }
+
+  .task-card::before {
+    content: '';
+    @apply absolute top-0 right-0 bottom-0 w-1;
+  }
+
+  .task-card.urgency-green::before {
+    @apply bg-lime-400;
+  }
+
+  .task-card.urgency-orange::before {
+    @apply bg-orange-400;
+  }
+
+  .task-card.urgency-red::before {
+    @apply bg-red-400;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Animation utilities */
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  .animate-slide-in {
+    animation: slideIn 0.3s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
