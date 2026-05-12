@@ -1,4 +1,4 @@
-export type QuestionType = "single" | "multiple";
+export type QuestionType = "single" | "multi";
 export type ChartType = "pie" | "bar";
 
 export interface Question {

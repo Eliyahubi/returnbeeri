@@ -88,7 +88,7 @@ export default function Survey() {
 
         <div className="space-y-5">
           {questions.map((q, idx) => {
-            const multi = q.type === "multiple";
+            const multi = q.type === "multi";
             const sel = selections[q.id] || [];
             return (
               <div key={q.id} className="bg-card border rounded-xl p-5 shadow-sm">

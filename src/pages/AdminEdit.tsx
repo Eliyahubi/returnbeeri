@@ -86,7 +86,7 @@ export default function AdminEdit() {
                 className="border rounded-lg px-3 py-2"
               >
                 <option value="single">בחירה יחידה</option>
-                <option value="multiple">בחירה מרובה</option>
+                <option value="multi">בחירה מרובה</option>
               </select>
               <select
                 value={d.chart_type}
