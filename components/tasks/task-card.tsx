@@ -33,7 +33,12 @@ export function TaskCard({ task }: TaskCardProps) {
               {task.title}
             </h3>
             {task.isBlocked && (
-              <Lock className="w-4 h-4 text-red-500 flex-shrink-0" title="חסום - יש תלות שלא הושלמה" />
+              <div className="relative group">
+                <Lock className="w-4 h-4 text-red-500 flex-shrink-0" />
+                <div className="absolute bottom-full right-0 mb-2 px-2 py-1 text-xs text-white bg-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                  חסום - יש תלות שלא הושלמה
+                </div>
+              </div>
             )}
           </div>
 
