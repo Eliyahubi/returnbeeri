@@ -1,6 +1,6 @@
 import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { TaskList } from '@/components/tasks/task-list'
 import { getDaysRemaining, formatDaysRemaining } from '@/lib/utils'

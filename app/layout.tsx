@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import { getServerSession } from 'next-auth'
 import { AuthProvider } from '@/components/providers/auth-provider'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { authOptions } from '@/lib/auth'
 import './globals.css'
 
 const inter = Inter({ 
