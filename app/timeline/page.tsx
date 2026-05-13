@@ -1,52 +1,54 @@
-import { getServerSession } from 'next-auth'
-import { redirect } from 'next/navigation'
-import { authOptions } from '@/lib/auth'
-import { db } from '@/lib/db'
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { formatDate, getDaysRemaining, statusLabels } from '@/lib/utils'
+import { mockTasks } from '@/lib/mock-data'
+import { useAuth } from '@/components/providers/auth-provider'
 
-export default async function TimelinePage() {
-  const session = await getServerSession(authOptions)
-  
-  if (!session) {
-    redirect('/login')
-  }
+export default function TimelinePage() {
+  const { user, isLoading } = useAuth()
+  const router = useRouter()
+  const [tasks, setTasks] = useState(mockTasks)
 
-  const where: any = {}
-  
-  // Regular users only see their own tasks
-  if (session.user.role === 'TASK_OWNER') {
-    where.ownerId = session.user.id
-  }
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push('/login')
+    }
+  }, [user, isLoading, router])
 
-  const tasks = await db.task.findMany({
-    where,
-    include: {
-      domain: true,
-      owner: { select: { id: true, name: true } },
-      dependencies: {
-        include: {
-          dependsOnTask: { select: { id: true, title: true } }
-        }
-      }
-    },
-    orderBy: { dueDate: 'asc' }
+  // Filter tasks based on user role
+  const filteredTasks = tasks.filter(task => {
+    // Regular users only see their own tasks
+    if (user?.role === 'TASK_OWNER') {
+      return task.assignedToId === user.id
+    }
+    return true
   })
 
   // Group tasks by status
   const groupedTasks = {
-    NOT_STARTED: tasks.filter(t => t.status === 'NOT_STARTED'),
-    IN_PROGRESS: tasks.filter(t => t.status === 'IN_PROGRESS'),
-    COMPLETED: tasks.filter(t => t.status === 'COMPLETED'),
-    BLOCKED: tasks.filter(t => t.status === 'BLOCKED'),
+    NOT_STARTED: filteredTasks.filter(t => t.status === 'NOT_STARTED'),
+    IN_PROGRESS: filteredTasks.filter(t => t.status === 'IN_PROGRESS'),
+    COMPLETED: filteredTasks.filter(t => t.status === 'COMPLETED'),
+    BLOCKED: filteredTasks.filter(t => t.status === 'BLOCKED'),
   }
 
   // Calculate timeline metrics
-  const totalTasks = tasks.length
-  const completedTasks = tasks.filter(t => t.status === 'COMPLETED').length
+  const totalTasks = filteredTasks.length
+  const completedTasks = filteredTasks.filter(t => t.status === 'COMPLETED').length
   const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
 
   // Find milestones
-  const milestones = tasks.filter(t => t.isMilestone)
+  const milestones = filteredTasks.filter(t => t.isMilestone)
+
+  if (isLoading || !user) {
+    return (
+      <div className="min-h-screen bg-sand-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sage-600"></div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -139,8 +141,7 @@ export default async function TimelinePage() {
                       className="flex items-center gap-4 p-3 bg-sand-50 rounded-lg"
                     >
                       <div 
-                        className="w-3 h-12 rounded-full"
-                        style={{ backgroundColor: task.domain?.color || '#ccc' }}
+                        className="w-3 h-12 rounded-full bg-sage-300"
                       />
                       
                       <div className="flex-1 min-w-0">
@@ -148,7 +149,7 @@ export default async function TimelinePage() {
                           {task.title}
                         </h3>
                         <div className="flex items-center gap-4 text-sm text-sand-500 mt-1">
-                          <span>{task.owner.name}</span>
+                          <span>{task.assignee.name}</span>
                           {task.domain && (
                             <span>{task.domain.name}</span>
                           )}
@@ -160,14 +161,14 @@ export default async function TimelinePage() {
                         </div>
                         {task.dependencies.length > 0 && (
                           <div className="mt-2 text-xs text-sand-500">
-                            תלוי ב: {task.dependencies.map(d => d.dependsOnTask.title).join(', ')}
+                            תלוי ב: אין תלויות
                           </div>
                         )}
                       </div>
 
-                      {task.budget && (
+                      {false && (
                         <div className="text-sm text-sand-600">
-                          ₪{task.budget.toLocaleString()}
+                          ₪0
                         </div>
                       )}
                     </div>

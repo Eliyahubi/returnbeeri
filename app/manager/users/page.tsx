@@ -1,27 +1,31 @@
-import { getServerSession } from 'next-auth'
-import { redirect } from 'next/navigation'
-import { authOptions } from '@/lib/auth'
-import { db } from '@/lib/db'
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { roleLabels } from '@/lib/utils'
+import { mockUsers } from '@/lib/mock-data'
+import { useAuth } from '@/components/providers/auth-provider'
 import { Plus } from 'lucide-react'
 import Link from 'next/link'
 
-export default async function UsersManagementPage() {
-  const session = await getServerSession(authOptions)
-  
-  if (!session || !['SUPER_ADMIN', 'DOMAIN_MANAGER'].includes(session.user.role)) {
-    redirect('/dashboard')
-  }
+export default function UsersManagementPage() {
+  const { user, isLoading } = useAuth()
+  const router = useRouter()
+  const [users, setUsers] = useState(mockUsers)
 
-  const users = await db.user.findMany({
-    include: {
-      assignedDomains: { select: { id: true, name: true } },
-      _count: {
-        select: { ownedTasks: true }
-      }
-    },
-    orderBy: { name: 'asc' }
-  })
+  useEffect(() => {
+    if (!isLoading && (!user || !['SUPER_ADMIN', 'DOMAIN_MANAGER'].includes(user.role))) {
+      router.push('/dashboard')
+    }
+  }, [user, isLoading, router])
+
+  if (isLoading || !user) {
+    return (
+      <div className="min-h-screen bg-sand-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sage-600"></div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -92,21 +96,13 @@ export default async function UsersManagementPage() {
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex flex-wrap gap-1">
-                      {user.assignedDomains.map((domain) => (
-                        <span 
-                          key={domain.id}
-                          className="text-xs px-2 py-0.5 bg-sand-100 text-sand-600 rounded-full"
-                        >
-                          {domain.name}
-                        </span>
-                      ))}
-                      {user.assignedDomains.length === 0 && (
-                        <span className="text-xs text-sand-400">-</span>
-                      )}
+                      <span className="text-xs px-2 py-0.5 bg-sand-100 text-sand-600 rounded-full">
+                        כל התחומים
+                      </span>
                     </div>
                   </td>
                   <td className="py-3 px-4 text-sand-600">
-                    {user._count.ownedTasks}
+                    0
                   </td>
                   <td className="py-3 px-4">
                     <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${

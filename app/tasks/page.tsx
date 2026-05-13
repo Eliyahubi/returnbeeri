@@ -1,62 +1,54 @@
-import { getServerSession } from 'next-auth'
-import { redirect } from 'next/navigation'
-import { authOptions } from '@/lib/auth'
-import { db } from '@/lib/db'
+'use client'
+
+import { useEffect, useState, Suspense } from 'react'
+import { useRouter } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { TaskList } from '@/components/tasks/task-list'
 import { getDaysRemaining, formatDaysRemaining } from '@/lib/utils'
+import { mockTasks, mockDomains } from '@/lib/mock-data'
+import { useAuth } from '@/components/providers/auth-provider'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
 
-export default async function TasksPage({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | string[] | undefined }
-}) {
-  const session = await getServerSession(authOptions)
-  
-  if (!session) {
-    redirect('/login')
-  }
+function TasksPageContent() {
+  const { user, isLoading } = useAuth()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const [tasks, setTasks] = useState(mockTasks)
 
-  const statusFilter = searchParams.status as string | undefined
-  const domainFilter = searchParams.domain as string | undefined
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push('/login')
+    }
+  }, [user, isLoading, router])
 
-  const where: any = {}
-  
-  // Regular users only see their own tasks
-  if (session.user.role === 'TASK_OWNER') {
-    where.ownerId = session.user.id
-  }
+  const statusFilter = searchParams.get('status') as string | undefined
+  const domainFilter = searchParams.get('domain') as string | undefined
 
-  if (statusFilter && statusFilter !== 'all') {
-    where.status = statusFilter
-  }
-
-  if (domainFilter && domainFilter !== 'all') {
-    where.domainId = domainFilter
-  }
-
-  const tasks = await db.task.findMany({
-    where,
-    include: {
-      domain: true,
-      owner: { select: { id: true, name: true, email: true } },
-      dependencies: {
-        include: {
-          dependsOnTask: { select: { id: true, title: true, status: true } }
-        }
-      },
-      _count: { select: { comments: true, attachments: true } }
-    },
-    orderBy: [{ urgency: 'desc' }, { dueDate: 'asc' }]
+  // Filter tasks based on user role and filters
+  const filteredTasks = tasks.filter(task => {
+    // Regular users only see their own tasks
+    if (user?.role === 'TASK_OWNER') {
+      return task.assignedToId === user.id
+    }
+    
+    // Apply status filter
+    if (statusFilter && task.status !== statusFilter) {
+      return false
+    }
+    
+    // Apply domain filter
+    if (domainFilter && task.domainId !== domainFilter) {
+      return false
+    }
+    
+    return true
   })
 
-  const domains = await db.domain.findMany({ orderBy: { name: 'asc' } })
-
   // Enhance tasks with computed fields
-  const enhancedTasks = tasks.map(task => {
+  const enhancedTasks = filteredTasks.map(task => {
     const daysRemaining = task.dueDate ? getDaysRemaining(task.dueDate) : null
-    const isBlocked = task.dependencies.some(d => d.dependsOnTask.status !== 'COMPLETED')
+    const isBlocked = false // Mock data doesn't have dependencies
     
     return {
       ...task,
@@ -66,7 +58,15 @@ export default async function TasksPage({
     }
   })
 
-  const canCreateTask = ['SUPER_ADMIN', 'DOMAIN_MANAGER'].includes(session.user.role)
+  const canCreateTask = user && ['SUPER_ADMIN', 'DOMAIN_MANAGER'].includes(user.role)
+
+  if (isLoading || !user) {
+    return (
+      <div className="min-h-screen bg-sand-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sage-600"></div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -74,7 +74,7 @@ export default async function TasksPage({
         <div>
           <h1 className="text-2xl font-semibold text-sand-800">כל המשימות</h1>
           <p className="text-sand-600 mt-1">
-            {tasks.length} משימות בסה"כ
+            {filteredTasks.length} משימות בסה"כ
           </p>
         </div>
         {canCreateTask && (
@@ -120,7 +120,7 @@ export default async function TasksPage({
           className="px-3 py-1.5 text-sm rounded-lg border border-sand-300 bg-white focus:outline-none focus:ring-2 focus:ring-sage-500"
         >
           <option value="all">כל התחומים</option>
-          {domains.map(domain => (
+          {mockDomains.map(domain => (
             <option key={domain.id} value={domain.id}>{domain.name}</option>
           ))}
         </select>
@@ -128,5 +128,17 @@ export default async function TasksPage({
 
       <TaskList tasks={enhancedTasks} />
     </div>
+  )
+}
+
+export default function TasksPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-sand-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sage-600"></div>
+      </div>
+    }>
+      <TasksPageContent />
+    </Suspense>
   )
 }

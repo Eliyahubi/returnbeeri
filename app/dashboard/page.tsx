@@ -1,90 +1,66 @@
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { db } from '@/lib/db'
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { TaskList } from '@/components/tasks/task-list'
 import { DashboardStats } from '@/components/dashboard/stats'
 import { DashboardFilters } from '@/components/dashboard/filters'
 import { getDaysRemaining, formatDaysRemaining, getUrgencyFromDays } from '@/lib/utils'
+import { mockTasks, mockDomains } from '@/lib/mock-data'
+import { useAuth } from '@/components/providers/auth-provider'
 
-export default async function DashboardPage({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | string[] | undefined }
-}) {
-  const session = await getServerSession(authOptions)
-  
-  if (!session) {
-    return null
-  }
+export default function DashboardPage() {
+  const { user, isLoading } = useAuth()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const [tasks, setTasks] = useState(mockTasks)
 
-  const statusFilter = searchParams.status as string | undefined
-  const domainFilter = searchParams.domain as string | undefined
-  const urgencyFilter = searchParams.urgency as string | undefined
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push('/login')
+    }
+  }, [user, isLoading, router])
 
-  // Build where clause for tasks
-  const where: any = {
-    ownerId: session.user.id,
-  }
+  const statusFilter = searchParams.get('status') as string | undefined
+  const domainFilter = searchParams.get('domain') as string | undefined
+  const urgencyFilter = searchParams.get('urgency') as string | undefined
 
-  if (statusFilter && statusFilter !== 'all') {
-    where.status = statusFilter
-  }
-
-  if (domainFilter && domainFilter !== 'all') {
-    where.domainId = domainFilter
-  }
-
-  if (urgencyFilter && urgencyFilter !== 'all') {
-    where.urgency = urgencyFilter
-  }
-
-  // Fetch user's tasks
-  const tasks = await db.task.findMany({
-    where,
-    include: {
-      domain: true,
-      owner: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        }
-      },
-      dependencies: {
-        include: {
-          dependsOnTask: {
-            select: {
-              id: true,
-              title: true,
-              status: true,
-            }
-          }
-        }
-      },
-      _count: {
-        select: {
-          comments: true,
-          attachments: true,
-        }
+  // Filter tasks based on user role and filters
+  const filteredTasks = tasks.filter(task => {
+    // Users only see their own tasks
+    if (task.assignedToId !== user?.id) {
+      return false
+    }
+    
+    // Apply status filter
+    if (statusFilter && statusFilter !== 'all' && task.status !== statusFilter) {
+      return false
+    }
+    
+    // Apply domain filter
+    if (domainFilter && domainFilter !== 'all' && task.domainId !== domainFilter) {
+      return false
+    }
+    
+    // Apply urgency filter
+    if (urgencyFilter && urgencyFilter !== 'all') {
+      const daysRemaining = task.dueDate ? getDaysRemaining(task.dueDate) : null
+      const urgency = daysRemaining !== null ? getUrgencyFromDays(daysRemaining) : null
+      if (urgency !== urgencyFilter) {
+        return false
       }
-    },
-    orderBy: [
-      { urgency: 'desc' },
-      { dueDate: 'asc' },
-    ],
-  })
-
-  // Fetch all domains for filter
-  const domains = await db.domain.findMany({
-    orderBy: { name: 'asc' }
+    }
+    
+    return true
   })
 
   // Calculate stats
   const stats = {
-    total: tasks.length,
-    inProgress: tasks.filter(t => t.status === 'IN_PROGRESS').length,
-    completed: tasks.filter(t => t.status === 'COMPLETED').length,
-    late: tasks.filter(t => {
+    total: filteredTasks.length,
+    inProgress: filteredTasks.filter(t => t.status === 'IN_PROGRESS').length,
+    completed: filteredTasks.filter(t => t.status === 'COMPLETED').length,
+    late: filteredTasks.filter(t => {
       if (!t.dueDate) return false
       const daysRemaining = getDaysRemaining(t.dueDate)
       return daysRemaining < 0 && t.status !== 'COMPLETED'
@@ -92,11 +68,9 @@ export default async function DashboardPage({
   }
 
   // Enhance tasks with computed fields
-  const enhancedTasks = tasks.map(task => {
+  const enhancedTasks = filteredTasks.map(task => {
     const daysRemaining = task.dueDate ? getDaysRemaining(task.dueDate) : null
-    const isBlocked = task.dependencies.some(d => 
-      d.dependsOnTask.status !== 'COMPLETED'
-    )
+    const isBlocked = false // Mock data doesn't have dependencies
     
     return {
       ...task,
@@ -106,12 +80,20 @@ export default async function DashboardPage({
     }
   })
 
+  if (isLoading || !user) {
+    return (
+      <div className="min-h-screen bg-sand-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sage-600"></div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-semibold text-sand-800">
-          שלום, {session.user.name}
+          שלום, {user.name}
         </h1>
         <p className="text-sand-600 mt-1">
           הנה המשימות שלך להיום
@@ -123,7 +105,7 @@ export default async function DashboardPage({
 
       {/* Filters */}
       <DashboardFilters 
-        domains={domains}
+        domains={mockDomains}
         currentFilters={{
           status: statusFilter,
           domain: domainFilter,

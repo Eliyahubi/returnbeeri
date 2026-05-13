@@ -1,12 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Home, Mail, Lock, AlertCircle } from 'lucide-react'
+import { useAuth } from '@/components/providers/auth-provider'
 
 export default function LoginPage() {
   const router = useRouter()
+  const { login } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -18,17 +19,12 @@ export default function LoginPage() {
     setError('')
 
     try {
-      const result = await signIn('credentials', {
-        email,
-        password,
-        redirect: false,
-      })
+      const success = await login(email, password)
 
-      if (result?.error) {
+      if (!success) {
         setError('אימייל או סיסמה שגויים')
       } else {
         router.push('/dashboard')
-        router.refresh()
       }
     } catch {
       setError('אירעה שגיאה. נסה שוב.')
@@ -122,7 +118,7 @@ export default function LoginPage() {
         {/* Demo credentials hint */}
         <div className="mt-6 text-center">
           <p className="text-xs text-sand-400">
-            לבדיקה: admin@example.com / admin123
+            לבדיקה: admin@example.com / password
           </p>
         </div>
       </div>

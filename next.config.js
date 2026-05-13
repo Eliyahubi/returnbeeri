@@ -1,22 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    serverActions: {
-      bodySizeLimit: '2mb'
-    }
-  },
+  output: 'export',
+  trailingSlash: true,
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
         hostname: '**'
       }
     ]
-  },
-  i18n: {
-    locales: ['he', 'en'],
-    defaultLocale: 'he',
-    localeDetection: false
   }
 }
 

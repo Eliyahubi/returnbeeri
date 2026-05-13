@@ -1,22 +1,17 @@
 'use client'
 
-import { signOut } from 'next-auth/react'
 import { useState } from 'react'
 import { User, LogOut, ChevronDown, Bell } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { roleLabels } from '@/lib/utils'
+import { useAuth } from '@/components/providers/auth-provider'
+import Link from 'next/link'
 
-interface UserNavProps {
-  user: {
-    id: string
-    name: string
-    email: string
-    role: string
-  }
-}
-
-export function UserNav({ user }: UserNavProps) {
+export function UserNav() {
+  const { logout, user } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
+
+  if (!user) return null
 
   return (
     <div className="relative">
@@ -69,7 +64,10 @@ export function UserNav({ user }: UserNavProps) {
 
             <div className="border-t border-sand-100 py-1">
               <button
-                onClick={() => signOut({ callbackUrl: '/login' })}
+                onClick={() => {
+                  logout()
+                  window.location.href = '/login'
+                }}
                 className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-right"
               >
                 <LogOut className="w-4 h-4" />
@@ -82,5 +80,3 @@ export function UserNav({ user }: UserNavProps) {
     </div>
   )
 }
-
-import Link from 'next/link'

@@ -1,18 +1,31 @@
-import { getServerSession } from 'next-auth'
-import { redirect } from 'next/navigation'
-import { authOptions } from '@/lib/auth'
+'use client'
+
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { DashboardNav } from '@/components/dashboard/nav'
 import { UserNav } from '@/components/dashboard/user-nav'
+import { useAuth } from '@/components/providers/auth-provider'
 
-export default async function DashboardLayout({
+export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const session = await getServerSession(authOptions)
+  const { user, isLoading } = useAuth()
+  const router = useRouter()
 
-  if (!session) {
-    redirect('/login')
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push('/login')
+    }
+  }, [user, isLoading, router])
+
+  if (isLoading || !user) {
+    return (
+      <div className="min-h-screen bg-sand-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sage-600"></div>
+      </div>
+    )
   }
 
   return (
@@ -21,13 +34,13 @@ export default async function DashboardLayout({
       <header className="sticky top-0 z-50 bg-white border-b border-sand-200 shadow-sm">
         <div className="flex items-center justify-between h-16 px-4 lg:px-8">
           <div className="flex items-center gap-4">
-            <DashboardNav userRole={session.user.role} />
+            <DashboardNav userRole={user.role} />
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-sand-600 hidden sm:inline">
-              {session.user.name}
+              {user.name}
             </span>
-            <UserNav user={session.user} />
+            <UserNav />
           </div>
         </div>
       </header>
